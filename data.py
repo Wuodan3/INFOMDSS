@@ -1,3 +1,12 @@
 import pandas as pd
 
-data = pd.read_csv("data")
+def dataloading():
+    urlowid= "https://covid.ourworldindata.org/data/owid-covid-data.csv"
+    data = pd.read_csv(urlowid)
+    print(data)
+
+
+
+
+
+dataloading()
