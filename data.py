@@ -3,6 +3,7 @@ import pandas as pd
 def dataloading():
     urlowid= "https://covid.ourworldindata.org/data/owid-covid-data.csv"
     data = pd.read_csv(urlowid)
+    data['date'] = pd.to_datetime(data['date'])
     return data
 
 def dataNL(df):
