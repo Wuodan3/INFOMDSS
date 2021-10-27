@@ -23,21 +23,37 @@ def dataNL(df):
     NLdata = pd.merge(NLdata, df)
     return NLdata
 
-#create data frame for figure
+def dataSWE(df):
+    SWEdata = df.loc[df.location == "Sweden", "location"]
+    SWEdata = pd.merge(SWEdata, df)
+    return SWEdata
+
+def dataAUS(df):
+    AUSdata = df.loc[df.location == "Australia", "location"]
+    AUSdata = pd.merge(AUSdata, df)
+    return AUSdata
+
+#create dataframes
 df = dataloading()
 NLdata = dataNL(df)
+SWEdata = dataSWE(df)
+AUSdata = dataAUS(df)
+frames = [NLdata, SWEdata, AUSdata]
+threecountries = pd.concat(frames)
+print(threecountries)
 
+#create dfs for figures in dropdown
 df1 = NLdata[['date', 'new_cases', 'location', 'stringency_index']]
 df2 = NLdata[['date', 'stringency_index', 'location', 'new_cases']]
 # create graph with data from owid use date as x use new cases for y every 'location' gets different color
 fig37 = px.line(
-    df1, x='date', y='new_cases',  
-    title="corona cases for each country", height=325
+    threecountries, x='date', y='new_cases', color='location',
+    title="corona cases for each country", height=450
 )
 #create graph 2 specify the dataframe and what xy labels to use, every country gets own color
 fig2 = px.line(
-    df2, x='date', y='stringency_index',
-    title="stringency for each", height=325
+    threecountries, x='date', y='stringency_index', color='location',
+    title="stringency for each", height=450
 )
 
 # initialize dash
@@ -74,12 +90,12 @@ def graph_update(dropdown_value):
     if dropdown_value == "Netherlands_cases":
         fig = px.line(
         df1, x='date', y='new_cases',  
-        title="corona cases for each country", height=325
+        title="corona cases for Netherlands", height=325
         )
     if dropdown_value == "Netherlands_index":
         fig = px.line(
         df2, x='date', y='stringency_index',
-        title="stringency for each", height=325
+        title="stringency for Netherlands", height=325
         )
     return fig
 

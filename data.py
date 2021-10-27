@@ -26,4 +26,6 @@ df = dataloading()
 NLdata = dataNL(df)
 SWEdata = dataSWE(df)
 AUSdata = dataAUS(df)
-print(NLdata)
+frames = [NLdata, SWEdata, AUSdata]
+threecountries = pd.concat(frames)
+print(threecountries)
