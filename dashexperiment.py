@@ -49,9 +49,9 @@ app.layout = html.Div([
     dcc.Dropdown(
         id='dropdown',
         options=[
-            {'label': 'Netherlands_cases', 'value': 'Netherlands'},
+            {'label': 'Netherlands_cases', 'value': 'Netherlands_cases'},
             {'label': 'Netherlands_index', 'value': 'Netherlands_index'}],
-        value='Netherlands'
+        value='Netherlands_cases'
         ),
     dcc.Graph(id='graph1'),
     
@@ -68,9 +68,10 @@ app.layout = html.Div([
 @app.callback(Output(component_id='graph1', component_property= 'figure'),
               [Input(component_id='dropdown', component_property= 'value')])
 
+
 def graph_update(dropdown_value):
     print(dropdown_value)
-    if dropdown_value == "Netherlands":
+    if dropdown_value == "Netherlands_cases":
         fig = px.line(
         df1, x='date', y='new_cases',  
         title="corona cases for each country", height=325
