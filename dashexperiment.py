@@ -69,6 +69,7 @@ app.layout = html.Div([
             {'label': 'Netherlands_index', 'value': 'Netherlands_index'}],
         value='Netherlands_cases'
         ),
+    #instead of plotting specific countries we can plot predicted graphs
     dcc.Graph(id='graph1'),
     
     #idk what this next thing is
