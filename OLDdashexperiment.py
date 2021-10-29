@@ -1,16 +1,15 @@
+import json
+
 import dash
+#import dash_core_components as dcc
 from dash import dcc
+#import dash_html_components as html
 from dash import html
 from dash.dependencies import Input, Output
 import plotly.express as px
+
 import pandas as pd
 import numpy as np
-from flask import Flask
-
-app=Flask(__name__)
-
-@app.route("/")
-
 
 #load data function
 def dataloading():
@@ -101,6 +100,4 @@ def graph_update(dropdown_value):
         )
     return fig
 
-
-if __name__ == "__main__":
-    app.run_server(host='0.0.0.0', debug= True, port=5000)
+app.run_server(host="127.0.0.1")

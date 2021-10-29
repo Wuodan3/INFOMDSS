@@ -1,0 +1,12 @@
+version: "3.7"
+services:
+  corona_dashboard:
+    build:
+      context: .
+    image: corona:1.0.0
+    container_name: corona_dashboard
+    ports:
+      - "5000:5000"
+    environment:
+      - TARGET=LIVE
+    restart: unless-stopped
