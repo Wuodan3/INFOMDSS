@@ -19,6 +19,14 @@ def dataloading():
     data['date'] = pd.to_datetime(data['date']) #this helps when creating graphs where x = date
     return data
 
+def RIVMdata():
+    urlRIVM = "https://data.rivm.nl/covid-19/COVID-19_aantallen_gemeente_per_dag.csv"
+    data = pd.read_csv(urlRIVM, sep=';', header=0)
+    data['date'] = pd.to_datetime(data['Date_of_publication'])
+    data.sort_values(by=['date'])
+    #Total_reported is postive tests per day
+    return data
+
 def dataNL(df):
     NLdata = df.loc[df.location == "Netherlands", "location"]
     NLdata = pd.merge(NLdata, df)
@@ -36,6 +44,7 @@ def dataAUS(df):
 
 #create dataframes
 df = dataloading()
+RIVMdf = RIVMdata()
 NLdata = dataNL(df)
 SWEdata = dataSWE(df)
 AUSdata = dataAUS(df)
@@ -56,6 +65,12 @@ fig2 = px.line(
     threecountries, x='date', y='stringency_index', color='location',
     title="stringency for each", height=450
 )
+#RIVM graph
+figRIVM = px.bar(
+    RIVMdf, x='date', y='Total_reported',
+    title="RIVM reported cases per day", height=450
+)
+
 
 # initialize dash
 app = dash.Dash(__name__)
@@ -63,6 +78,7 @@ app = dash.Dash(__name__)
 app.layout = html.Div([
     dcc.Graph(id="graph", figure=fig37),
     dcc.Graph(id="graph2", figure=fig2),
+    dcc.Graph(id="graph3", figure=figRIVM),
     dcc.Dropdown(
         id='dropdown',
         options=[
