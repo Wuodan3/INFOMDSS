@@ -17,6 +17,7 @@ def dataloading():
     urlowid= "https://covid.ourworldindata.org/data/owid-covid-data.csv"
     data = pd.read_csv(urlowid)
     data['date'] = pd.to_datetime(data['date']) #this helps when creating graphs where x = date
+    #set NaN to 0
     return data
 
 def RIVMdata():
