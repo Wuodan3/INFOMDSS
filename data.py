@@ -37,4 +37,4 @@ SWEdata = dataSWE(df)
 AUSdata = dataAUS(df)
 frames = [NLdata, SWEdata, AUSdata]
 threecountries = pd.concat(frames)
-print(RIVMdf.info())
+print(RIVMdf)

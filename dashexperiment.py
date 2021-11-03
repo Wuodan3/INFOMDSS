@@ -55,6 +55,7 @@ print(threecountries)
 #create dfs for figures in dropdown
 df1 = NLdata[['date', 'new_cases', 'location', 'stringency_index']]
 df2 = NLdata[['date', 'stringency_index', 'location', 'new_cases']]
+df3 = RIVMdf[['date', 'Total_reported']]
 # create graph with data from owid use date as x use new cases for y every 'location' gets different color
 fig37 = px.line(
     threecountries, x='date', y='new_cases', color='location',
@@ -66,8 +67,8 @@ fig2 = px.line(
     title="stringency for each", height=450
 )
 #RIVM graph
-figRIVM = px.bar(
-    RIVMdf, x='date', y='Total_reported',
+figRIVM = px.line(
+    df3, x='date', y='Total_reported',
     title="RIVM reported cases per day", height=450
 )
 
