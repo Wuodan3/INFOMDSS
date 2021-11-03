@@ -22,7 +22,7 @@ def dataloading():
 
 def RIVMdata():
     urlRIVM = "https://data.rivm.nl/covid-19/COVID-19_aantallen_gemeente_per_dag.csv"
-    data = pd.read_csv(urlRIVM, sep=';', header=0)
+    data = pd.read_csv(urlRIVM, sep=';')
     data['date'] = pd.to_datetime(data['Date_of_publication'])
     data.sort_values(by=['date'])
     #Total_reported is postive tests per day
@@ -57,6 +57,11 @@ print(threecountries)
 df1 = NLdata[['date', 'new_cases', 'location', 'stringency_index']]
 df2 = NLdata[['date', 'stringency_index', 'location', 'new_cases']]
 df3 = RIVMdf[['date', 'Total_reported']]
+print(df3.info())
+df3 = df3.groupby('date')['Total_reported'].sum()
+df3 = pd.DataFrame({'date':df3.index, 'Total_reported':df3.values})
+print(df3)
+
 # create graph with data from owid use date as x use new cases for y every 'location' gets different color
 fig37 = px.line(
     threecountries, x='date', y='new_cases', color='location',
