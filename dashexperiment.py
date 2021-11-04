@@ -6,6 +6,8 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 from flask import Flask
+import statsmodels as sm
+from statsmodels.tsa.ar_model import AutoReg
 
 app=Flask(__name__)
 
@@ -43,6 +45,15 @@ def dataAUS(df):
     AUSdata = pd.merge(AUSdata, df)
     return AUSdata
 
+def predictRIVM(df3):
+    # fit model
+    model = AutoReg(df3, lags=1)
+    model_fit = model.fit()
+    # let's make prediction
+    y = model_fit.predict(len(df3), len(df3)+30)
+    print(y)
+    return y
+
 #create dataframes
 df = dataloading()
 RIVMdf = RIVMdata()
@@ -60,7 +71,20 @@ df3 = RIVMdf[['date', 'Total_reported']]
 print(df3.info())
 df3 = df3.groupby('date')['Total_reported'].sum()
 df3 = pd.DataFrame({'date':df3.index, 'Total_reported':df3.values})
-print(df3)
+print(df3.info())
+
+#predict RIVM data using predictRIVM()
+df3onlynums = df3['Total_reported']
+predict = predictRIVM(df3onlynums.astype(float))
+#create new df where output of predictRIVM can be stored
+predicteddf = []
+predicteddf = pd.DataFrame({'index':predict.index, 'predicted':predict.values})
+# add date range for next 30 days
+predicteddf['date'] = pd.date_range(start=pd.Timestamp('today'), periods=31)
+#remove hours from column date
+predicteddf['date'] = pd.to_datetime(predicteddf['date']).dt.date
+print(predicteddf)
+
 
 # create graph with data from owid use date as x use new cases for y every 'location' gets different color
 fig37 = px.line(
@@ -72,12 +96,15 @@ fig2 = px.line(
     threecountries, x='date', y='stringency_index', color='location',
     title="stringency for each", height=450
 )
-#RIVM graph
+#RIVM graphs
 figRIVM = px.line(
     df3, x='date', y='Total_reported',
     title="RIVM reported cases per day", height=450
 )
-
+figRIVMpredicted = px.line(
+    predicteddf, x='date', y='predicted',
+    title="Rredicted trend for the next 30 days", height=450
+)
 
 # initialize dash
 app = dash.Dash(__name__)
@@ -86,6 +113,7 @@ app.layout = html.Div([
     dcc.Graph(id="graph", figure=fig37),
     dcc.Graph(id="graph2", figure=fig2),
     dcc.Graph(id="graph3", figure=figRIVM),
+    dcc.Graph(id="graph4", figure=figRIVMpredicted),
     dcc.Dropdown(
         id='dropdown',
         options=[
