@@ -67,12 +67,17 @@ def predictor(x):
 #create dataframes
 df = dataloading()
 RIVMdf = RIVMdata()
+RIVMdf = RIVMdf.sort_values(by = 'date')
 NLdata = dataNL(df)
+NLdata = NLdata.sort_values(by = 'date')
 SWEdata = dataSWE(df)
+SWEdata = SWEdata.sort_values(by = 'date')
 AUSdata = dataAUS(df)
+AUSdata = AUSdata.sort_values(by = 'date')
 frames = [NLdata, SWEdata, AUSdata]
 threecountries = pd.concat(frames)
 print(threecountries)
+threecountries = threecountries.sort_values(by = 'date')
 
 #create dfs for figures in dropdown
 df1 = NLdata[['date', 'new_cases', 'location', 'stringency_index']]
@@ -85,7 +90,7 @@ print(df3.info())
 df4 = SWEdata[['date', 'new_cases', 'location', 'stringency_index']]
 df5 = AUSdata[['date', 'new_cases', 'location', 'stringency_index']]
 df6 = threecountries[['date', 'new_cases', 'location', 'stringency_index']]
-
+df6 = df6.sort_values(by = 'date')
 
 #predict RIVM data using predictRIVM()
 df3onlynums = df3['Total_reported']
@@ -99,6 +104,7 @@ predicteddf['date'] = pd.date_range(start=pd.Timestamp('today'), periods=31)
 predicteddf['date'] = pd.to_datetime(predicteddf['date']).dt.date
 predicteddf['location'] = 'Netherlands'
 print(predicteddf)
+predicteddf = predicteddf.sort_values(by='date')
 
 # AutoRegression for sweden using predictor()
 SWEpredict = SWEdata['new_cases']
@@ -121,9 +127,10 @@ predictedAUS['location'] = 'Australia'
 print(predictedAUS)
 
 # combine data
-framesPredicted = [predicteddf, predictedSWE, predictedAUS]
+framesPredicted = [predictedAUS, predictedSWE, predicteddf]
 NLSWEAUSpredicted = pd.concat(framesPredicted)
 print(NLSWEAUSpredicted)
+NLSWEAUSpredicted = NLSWEAUSpredicted.sort_values(by='date')
 
 
 # create graph with data from owid use date as x use new cases for y every 'location' gets different color
@@ -136,7 +143,10 @@ figPredicted = px.line(
     title="Predicted trend for the next 30 days", height=450
 )
 
-
+fig_cases_all = px.line(
+        threecountries, x='date', y='new_cases', color='location',
+        title="corona cases for each country", height=450
+)
 
 # initialize dash
 app = dash.Dash(__name__)
@@ -182,10 +192,7 @@ def graph_update(dropdown_value):
         title="corona cases for Australia", height=450
         ) 
     if dropdown_value == "All":
-        fig = px.line(
-        threecountries, x='date', y='new_cases', color='location',
-        title="corona cases for each country", height=450
-)     
+        fig = fig_cases_all
 
     return fig
 
