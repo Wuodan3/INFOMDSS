@@ -46,12 +46,15 @@ def dataAUS(df):
     return AUSdata
 
 def predictRIVM(df3):
-    # fit model
     model = AutoReg(df3, lags=1)
     model_fit = model.fit()
-    # let's make prediction
     y = model_fit.predict(len(df3), len(df3)+30)
-    print(y)
+    return y
+
+def predictor(x):
+    model = AutoReg(x, lags=1)
+    model_fit = model.fit()
+    y = model_fit.predict(len(x), len(x)+30)
     return y
 
 #create dataframes
@@ -83,8 +86,33 @@ predicteddf = pd.DataFrame({'index':predict.index, 'predicted':predict.values})
 predicteddf['date'] = pd.date_range(start=pd.Timestamp('today'), periods=31)
 #remove hours from column date
 predicteddf['date'] = pd.to_datetime(predicteddf['date']).dt.date
+predicteddf['location'] = 'Netherlands'
 print(predicteddf)
 
+# AutoRegression for sweden using predictor()
+SWEpredict = SWEdata['new_cases']
+predictSWE = predictor(SWEpredict.astype(float))
+predictedSWE = []
+predictedSWE = pd.DataFrame({'index':predictSWE.index, 'predicted':predictSWE.values})
+predictedSWE['date'] = pd.date_range(start=pd.Timestamp('today'), periods=31)
+predictedSWE['date'] = pd.to_datetime(predictedSWE['date']).dt.date
+predictedSWE['location'] = 'Sweden'
+print(predictedSWE)
+
+# AUtoRegression for Australia using predictor(), could be more efficient probably
+AUSpredict = AUSdata['new_cases']
+predictAUS = predictor(AUSpredict.astype(float))
+predictedAUS = []
+predictedAUS = pd.DataFrame({'index':predictAUS.index, 'predicted':predictAUS.values})
+predictedAUS['date'] = pd.date_range(start=pd.Timestamp('today'), periods=31)
+predictedAUS['date'] = pd.to_datetime(predictedAUS['date']).dt.date
+predictedAUS['location'] = 'Australia'
+print(predictedAUS)
+
+# combine data
+framesPredicted = [predicteddf, predictedSWE, predictedAUS]
+NLSWEAUSpredicted = pd.concat(framesPredicted)
+print(NLSWEAUSpredicted)
 
 # create graph with data from owid use date as x use new cases for y every 'location' gets different color
 fig37 = px.line(
@@ -101,9 +129,9 @@ figRIVM = px.line(
     df3, x='date', y='Total_reported',
     title="RIVM reported cases per day", height=450
 )
-figRIVMpredicted = px.line(
-    predicteddf, x='date', y='predicted',
-    title="Rredicted trend for the next 30 days", height=450
+figPredicted = px.line(
+    NLSWEAUSpredicted, x='date', y='predicted', color='location',
+    title="Predicted trend for the next 30 days", height=450
 )
 
 # initialize dash
@@ -113,7 +141,7 @@ app.layout = html.Div([
     dcc.Graph(id="graph", figure=fig37),
     dcc.Graph(id="graph2", figure=fig2),
     dcc.Graph(id="graph3", figure=figRIVM),
-    dcc.Graph(id="graph4", figure=figRIVMpredicted),
+    dcc.Graph(id="graph4", figure=figPredicted),
     dcc.Dropdown(
         id='dropdown',
         options=[
