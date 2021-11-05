@@ -138,6 +138,7 @@ figPredicted = px.line(
 app = dash.Dash(__name__)
 #give layout, graphs set at the top give unique id 
 app.layout = html.Div([
+    html.Div([html.H1('COVID-19 Dashboard with Predictive Analytics', style={'font-family':'verdana'})]),
     dcc.Graph(id="graph", figure=fig37),
     dcc.Graph(id="graph2", figure=fig2),
     dcc.Graph(id="graph3", figure=figRIVM),
