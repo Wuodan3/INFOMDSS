@@ -1,6 +1,7 @@
 import dash
 from dash import dcc
 from dash import html
+from dash.dcc.RangeSlider import RangeSlider
 from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
@@ -17,17 +18,23 @@ app=Flask(__name__)
 #load data function
 def dataloading():
     urlowid= "https://covid.ourworldindata.org/data/owid-covid-data.csv"
-    data = pd.read_csv(urlowid)
+    colsowid = ['date','new_cases','stringency_index', 'location']
+    data = pd.read_csv(urlowid, usecols=colsowid)
+    data['new_cases'] = data['new_cases'].replace(np.nan, 0)
+    data = data.astype({"new_cases":np.int64, "stringency_index":np.float64, "location":object})
     data['date'] = pd.to_datetime(data['date']) #this helps when creating graphs where x = date
-    #set NaN to 0
+    print(data.info())
     return data
 
 def RIVMdata():
     urlRIVM = "https://data.rivm.nl/covid-19/COVID-19_aantallen_gemeente_per_dag.csv"
-    data = pd.read_csv(urlRIVM, sep=';')
+    cols = ['Date_of_publication', 'Total_reported']
+    data = pd.read_csv(urlRIVM, sep=';', usecols=cols)
+    data = data.astype({'Total_reported':np.int64})
     data['date'] = pd.to_datetime(data['Date_of_publication'])
     data.sort_values(by=['date'])
     #Total_reported is postive tests per day
+    print(data.info())
     return data
 
 def dataNL(df):
@@ -120,17 +127,26 @@ print(predictedAUS)
 framesPredicted = [predicteddf, predictedSWE, predictedAUS]
 NLSWEAUSpredicted = pd.concat(framesPredicted)
 print(NLSWEAUSpredicted)
+NLSWEAUSpredicted['new_cases'] = NLSWEAUSpredicted['predicted']
+lk = [NLSWEAUSpredicted, threecountries]
+predictaddtoframes = pd.concat(lk)
 
 # create graph with data from owid use date as x use new cases for y every 'location' gets different color
 fig37 = px.line(
     threecountries, x='date', y='new_cases', color='location',
     title="corona cases for each country", height=450
 )
+
 #create graph 2 specify the dataframe and what xy labels to use, every country gets own color
 fig2 = px.line(
     threecountries, x='date', y='stringency_index', color='location',
     title="stringency for each", height=450
 )
+figpredictadd = px.line(
+    predictaddtoframes, x='date', y='new_cases', color='location',
+    title="stringency for each", height=450
+)
+
 #RIVM graphs
 figRIVM = px.line(
     df3, x='date', y='Total_reported',
@@ -159,6 +175,7 @@ app.layout = html.Div([
     html.Div([html.H1('COVID-19 Dashboard with Predictive Analytics', style={'font-family':'verdana'})]),
     dcc.Graph(id="graph", figure=fig37),
     dcc.Graph(id="graph200", figure=fig2),
+    dcc.Graph(id="graph201", figure=figpredictadd),
 #    dcc.Graph(id="graph3", figure=figRIVM),
     
     dcc.Dropdown(
@@ -173,16 +190,7 @@ app.layout = html.Div([
     #instead of plotting specific countries we can plot predicted graphs
     dcc.Graph(id='graph1'),
     dcc.Graph(id='graph2'),
-    dcc.Graph(id="graph4", figure=figPredicted),
-    #idk what this next thing is
-    html.Pre(
-        id='structure',
-        style={
-            'border': 'thin lightgrey solid', 
-            'overflowY': 'scroll',
-            'height': '275px'
-        }
-    )
+    dcc.Graph(id="graph4", figure=figPredicted)
 ])
 @app.callback(Output(component_id='graph1', component_property= 'figure'),
               [Input(component_id='dropdown', component_property= 'value')])
@@ -240,4 +248,4 @@ def graph_update(dropdown_value):
     return fig
 
 if __name__ == "__main__":
-    app.run_server(host='0.0.0.0', debug= True, port=5000)
+    app.run_server(host='0.0.0.0', debug= False, port=5000)
