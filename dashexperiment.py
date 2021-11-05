@@ -78,6 +78,10 @@ print(df3.info())
 df3 = df3.groupby('date')['Total_reported'].sum()
 df3 = pd.DataFrame({'date':df3.index, 'Total_reported':df3.values})
 print(df3.info())
+df4 = SWEdata[['date', 'new_cases', 'location', 'stringency_index']]
+df5 = AUSdata[['date', 'new_cases', 'location', 'stringency_index']]
+df6 = threecountries[['date', 'new_cases', 'location', 'stringency_index']]
+
 
 #predict RIVM data using predictRIVM()
 df3onlynums = df3['Total_reported']
@@ -142,20 +146,23 @@ app = dash.Dash(__name__)
 #give layout, graphs set at the top give unique id 
 app.layout = html.Div([
     html.Div([html.H1('COVID-19 Dashboard with Predictive Analytics', style={'font-family':'verdana'})]),
-    dcc.Graph(id="graph", figure=fig37),
-    dcc.Graph(id="graph2", figure=fig2),
-    dcc.Graph(id="graph3", figure=figRIVM),
-    dcc.Graph(id="graph4", figure=figPredicted),
+#    dcc.Graph(id="graph", figure=fig37),
+#    dcc.Graph(id="graph200", figure=fig2),
+#    dcc.Graph(id="graph3", figure=figRIVM),
+    
     dcc.Dropdown(
         id='dropdown',
         options=[
-            {'label': 'Netherlands_cases', 'value': 'Netherlands_cases'},
-            {'label': 'Netherlands_index', 'value': 'Netherlands_index'}],
-        value='Netherlands_cases'
+            {'label': 'Netherlands', 'value': 'Netherlands_cases'},
+            {'label': 'Sweden', 'value': 'Sweden_cases'},
+            {'label': 'Australia', 'value': 'Australia_cases'},
+            {'label': 'All', 'value': 'All'}],
+        value='All'
         ),
     #instead of plotting specific countries we can plot predicted graphs
     dcc.Graph(id='graph1'),
-    
+    dcc.Graph(id='graph2'),
+    dcc.Graph(id="graph4", figure=figPredicted),
     #idk what this next thing is
     html.Pre(
         id='structure',
@@ -169,21 +176,63 @@ app.layout = html.Div([
 @app.callback(Output(component_id='graph1', component_property= 'figure'),
               [Input(component_id='dropdown', component_property= 'value')])
 
+def graph_update(dropdown_value):
+    print(dropdown_value)
+    if dropdown_value == "Netherlands_cases":
+        fig = px.line(
+        df3, x='date', y='Total_reported',  
+        title="corona cases for Netherlands", height=450
+        ) 
+
+    if dropdown_value == "Sweden_cases":
+        fig = px.line(
+        df4, x='date', y='new_cases',  
+        title="corona cases for Sweden", height=450
+        ) 
+        
+    if dropdown_value == "Australia_cases":
+        fig = px.line(
+        df5, x='date', y='new_cases',  
+        title="corona cases for Australia", height=450
+        ) 
+    if dropdown_value == "All":
+        fig = px.line(
+        df6, x='date', y='new_cases', color='location',
+        title="corona cases for All", height=450
+        ) 
+        
+
+    return fig
+
+
+@app.callback(Output(component_id='graph2', component_property= 'figure'),
+              [Input(component_id='dropdown', component_property= 'value')])
 
 def graph_update(dropdown_value):
     print(dropdown_value)
     if dropdown_value == "Netherlands_cases":
         fig = px.line(
-        df1, x='date', y='new_cases',  
-        title="corona cases for Netherlands", height=325
+        df1, x='date', y='stringency_index',  
+        title="Stringency Index for Netherlands", height=450
         )
-    if dropdown_value == "Netherlands_index":
-        fig = px.line(
-        df2, x='date', y='stringency_index',
-        title="stringency for Netherlands", height=325
-        )
-    return fig
 
+    if dropdown_value == "Sweden_cases":
+        fig = px.line(
+        df4, x='date', y='stringency_index',  
+        title="Stringency Index for Sweden", height=450
+        ) 
+        
+    if dropdown_value == "Australia_cases":
+        fig = px.line(
+        df5, x='date', y='stringency_index',  
+        title="Stringency Index for Australia", height=450
+        ) 
+    if dropdown_value == "All":
+        fig = px.line(
+        df6, x='date', y='stringency_index', color='location',
+        title="corona cases for All", height=450
+        ) 
+    return fig
 
 if __name__ == "__main__":
     app.run_server(host='0.0.0.0', debug= True, port=5000)
