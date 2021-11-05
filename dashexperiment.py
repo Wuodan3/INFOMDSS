@@ -141,6 +141,17 @@ figPredicted = px.line(
     title="Predicted trend for the next 30 days", height=450
 )
 
+#solve slow loading
+gh = px.line(
+        df6, x='date', y='stringency_index', color='location',
+        title="Corona cases for All", height=450
+        ) 
+
+fastload = px.line(
+        df6, x='date', y='new_cases', color='location',
+        title="Corona cases for All", height=450
+        ) 
+
 # initialize dash
 app = dash.Dash(__name__)
 #give layout, graphs set at the top give unique id 
@@ -196,10 +207,7 @@ def graph_update(dropdown_value):
         title="corona cases for Australia", height=450
         ) 
     if dropdown_value == "All":
-        fig = px.line(
-        df6, x='date', y='new_cases', color='location',
-        title="corona cases for All", height=450
-        ) 
+        fig = fastload
         
 
     return fig
@@ -228,10 +236,7 @@ def graph_update(dropdown_value):
         title="Stringency Index for Australia", height=450
         ) 
     if dropdown_value == "All":
-        fig = px.line(
-        df6, x='date', y='stringency_index', color='location',
-        title="corona cases for All", height=450
-        ) 
+        fig = gh
     return fig
 
 if __name__ == "__main__":
