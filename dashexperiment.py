@@ -90,7 +90,7 @@ print(df3.info())
 df4 = SWEdata[['date', 'new_cases', 'location', 'stringency_index']]
 df5 = AUSdata[['date', 'new_cases', 'location', 'stringency_index']]
 df6 = threecountries[['date', 'new_cases', 'location', 'stringency_index']]
-df6 = df6.sort_values(by = 'date')
+df6 = df6.sort_values(by = ['date', 'location'])
 
 #predict RIVM data using predictRIVM()
 df3onlynums = df3['Total_reported']
@@ -127,7 +127,7 @@ predictedAUS['location'] = 'Australia'
 print(predictedAUS)
 
 # combine data
-framesPredicted = [predictedAUS, predictedSWE, predicteddf]
+framesPredicted = [predictedAUS, predicteddf, predictedSWE]
 NLSWEAUSpredicted = pd.concat(framesPredicted)
 print(NLSWEAUSpredicted)
 NLSWEAUSpredicted = NLSWEAUSpredicted.sort_values(by='date')
@@ -145,7 +145,7 @@ figPredicted = px.line(
 
 fig_cases_all = px.line(
         threecountries, x='date', y='new_cases', color='location',
-        title="corona cases for each country", height=450
+        title="Corona cases for each country", height=450
 )
 
 # initialize dash
@@ -177,19 +177,19 @@ def graph_update(dropdown_value):
     if dropdown_value == "Netherlands_cases":
         fig = px.line(
         df3, x='date', y='Total_reported',  
-        title="corona cases for Netherlands", height=450
+        title="Corona cases for Netherlands", height=450
         ) 
 
     if dropdown_value == "Sweden_cases":
         fig = px.line(
         df4, x='date', y='new_cases',  
-        title="corona cases for Sweden", height=450
+        title="Corona cases for Sweden", height=450
         ) 
         
     if dropdown_value == "Australia_cases":
         fig = px.line(
         df5, x='date', y='new_cases',  
-        title="corona cases for Australia", height=450
+        title="Corona cases for Australia", height=450
         ) 
     if dropdown_value == "All":
         fig = fig_cases_all
@@ -222,7 +222,7 @@ def graph_update(dropdown_value):
     if dropdown_value == "All":
         fig = px.line(
         threecountries, x='date', y='stringency_index', color='location',
-        title="stringency for each", height=450
+        title="Stringency for each country", height=450
         )
 
     return fig
