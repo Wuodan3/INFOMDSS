@@ -46,6 +46,9 @@ def dataAUS(df):
     return AUSdata
 
 def predictRIVM(df3):
+    #AutoReg uses Conditional Maximum Likelihood estimate to predict 
+    #source: https://www.statsmodels.org/dev/generated/statsmodels.tsa.ar_model.AutoReg.html
+    #source: https://www.sciencedirect.com/topics/mathematics/conditional-likelihood 
     model = AutoReg(df3, lags=1)
     model_fit = model.fit()
     y = model_fit.predict(len(df3), len(df3)+30)
