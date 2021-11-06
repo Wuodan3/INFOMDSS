@@ -138,11 +138,9 @@ print(NLSWEAUSpredicted)
 NLSWEAUSpredicted = NLSWEAUSpredicted.sort_values(by='date')
 
 
-# create graph with data from owid use date as x use new cases for y every 'location' gets different color
-
-#create graph 2 specify the dataframe and what xy labels to use, every country gets own color
 
 
+# preload graphs for faster loading in dropdown switcher
 figPredicted = px.line(
     NLSWEAUSpredicted, x='date', y='predicted', color='location',
     title="Predicted trend for the next 30 days", height=450
@@ -151,6 +149,11 @@ figPredicted = px.line(
 fig_cases_all = px.line(
         threecountries, x='date', y='new_cases', color='location',
         title="Corona cases for each country", height=450
+)
+
+allSI = px.line(
+        threecountries, x='date', y='stringency_index', color='location',
+        title="Stringency for each country", height=450
 )
 
 # initialize dash
@@ -225,10 +228,7 @@ def graph_update(dropdown_value):
         title="Stringency Index for Australia", height=450
         ) 
     if dropdown_value == "All":
-        fig = px.line(
-        threecountries, x='date', y='stringency_index', color='location',
-        title="Stringency for each country", height=450
-        )
+        fig = allSI
 
     return fig
 
