@@ -1,7 +1,6 @@
 import dash
 from dash import dcc
 from dash import html
-from dash.dcc.RangeSlider import RangeSlider
 from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
@@ -10,12 +9,13 @@ from flask import Flask
 import statsmodels as sm
 from statsmodels.tsa.ar_model import AutoReg
 
-app = Flask(__name__)
-@app.route("/")
 
 
 
-#load data function
+
+
+#This next function loads data from OWID. Every time the python file is ran a new version of the data will be loaded.
+#The data is minimized using usecols to reduce file size
 def dataloading():
     urlowid= "https://covid.ourworldindata.org/data/owid-covid-data.csv"
     colsowid = ['date','new_cases','stringency_index', 'location']
@@ -23,21 +23,21 @@ def dataloading():
     data['new_cases'] = data['new_cases'].replace(np.nan, 0)
     data = data.astype({"new_cases":np.int64, "stringency_index":np.float64, "location":object})
     data['date'] = pd.to_datetime(data['date']) #this helps when creating graphs where x = date
-    print(data.info())
-
     return data
 
+#This loads the RIVM data, the second data source. It will be used to predict new cases in the Netherlands 
+#Also this data is minimized to reduce file size and increase performance
 def RIVMdata():
     urlRIVM = "https://data.rivm.nl/covid-19/COVID-19_aantallen_gemeente_per_dag.csv"
-    cols = ['Date_of_publication', 'Total_reported']
-    data = pd.read_csv(urlRIVM, sep=';', usecols=cols)
+    colsrivm = ['Date_of_publication', 'Total_reported']
+    data = pd.read_csv(urlRIVM, usecols=colsrivm, sep=';')
     data = data.astype({'Total_reported':np.int64})
     data['date'] = pd.to_datetime(data['Date_of_publication'])
     data.sort_values(by=['date'])
     #Total_reported is postive tests per day
-    print(data.info())
     return data
 
+#these next functions filter the required countries from the OurWorldInData dataset
 def dataNL(df):
     NLdata = df.loc[df.location == "Netherlands", "location"]
     NLdata = pd.merge(NLdata, df)
@@ -53,6 +53,7 @@ def dataAUS(df):
     AUSdata = pd.merge(AUSdata, df)
     return AUSdata
 
+#this function is used to
 def predictRIVM(df3):
     #AutoReg uses Conditional Maximum Likelihood estimate to predict 
     #source: https://www.statsmodels.org/dev/generated/statsmodels.tsa.ar_model.AutoReg.html
@@ -120,7 +121,6 @@ predictedSWE['date'] = pd.to_datetime(predictedSWE['date']).dt.date
 predictedSWE['location'] = 'Sweden'
 print(predictedSWE)
 
-
 # AUtoRegression for Australia using predictor(), could be more efficient probably
 AUSpredict = AUSdata['new_cases']
 predictAUS = predictor(AUSpredict.astype(float))
@@ -132,45 +132,34 @@ predictedAUS['location'] = 'Australia'
 print(predictedAUS)
 
 # combine data
-
 framesPredicted = [predictedAUS, predicteddf, predictedSWE]
 NLSWEAUSpredicted = pd.concat(framesPredicted)
 print(NLSWEAUSpredicted)
 NLSWEAUSpredicted = NLSWEAUSpredicted.sort_values(by='date')
-NLSWEAUSpredicted['new_cases'] = NLSWEAUSpredicted['predicted']
 
 
+# create graph with data from owid use date as x use new cases for y every 'location' gets different color
 
 #create graph 2 specify the dataframe and what xy labels to use, every country gets own color
-figpredictadd = px.line(
-    NLSWEAUSpredicted, x='date', y='new_cases', color='location',
-    title="Predicted new cases for the next 30 days", height=450
-)
 
-#RIVM graphs
 
 figPredicted = px.line(
     NLSWEAUSpredicted, x='date', y='predicted', color='location',
     title="Predicted trend for the next 30 days", height=450
 )
 
-#solve slow loading
-gh = px.line(
-        df6, x='date', y='stringency_index', color='location',
-        title="Corona cases for All", height=450
-        ) 
-
-fastload = px.line(
-        df6, x='date', y='new_cases', color='location',
-        title="Corona cases for All", height=450
-        ) 
+fig_cases_all = px.line(
+        threecountries, x='date', y='new_cases', color='location',
+        title="Corona cases for each country", height=450
+)
 
 # initialize dash
 app = dash.Dash(__name__)
 #give layout, graphs set at the top give unique id 
 app.layout = html.Div([
     html.Div([html.H1('COVID-19 Dashboard with Predictive Analytics', style={'font-family':'verdana'})]),
-    dcc.Graph(id="graph201", figure=figPredicted),
+    dcc.Graph(id="graph", figure=figPredicted),
+#    dcc.Graph(id="graph3", figure=figRIVM),
     
     dcc.Dropdown(
         id='dropdown',
@@ -183,7 +172,7 @@ app.layout = html.Div([
         ),
     #instead of plotting specific countries we can plot predicted graphs
     dcc.Graph(id='graph1'),
-    dcc.Graph(id='graph2'),
+    dcc.Graph(id='graph2')
 ])
 @app.callback(Output(component_id='graph1', component_property= 'figure'),
               [Input(component_id='dropdown', component_property= 'value')])
@@ -208,8 +197,7 @@ def graph_update(dropdown_value):
         title="Corona cases for Australia", height=450
         ) 
     if dropdown_value == "All":
-        fig = fastload
-        
+        fig = fig_cases_all
 
     return fig
 
@@ -237,9 +225,13 @@ def graph_update(dropdown_value):
         title="Stringency Index for Australia", height=450
         ) 
     if dropdown_value == "All":
-        fig = gh
+        fig = px.line(
+        threecountries, x='date', y='stringency_index', color='location',
+        title="Stringency for each country", height=450
+        )
+
     return fig
 
-
+server = app.server
 if __name__ == "__main__":
-    app.run_server(host='0.0.0.0', debug= False, port=5000)
+    app.run_server(host='0.0.0.0')
