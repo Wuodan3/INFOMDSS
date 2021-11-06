@@ -8,7 +8,8 @@ import numpy as np
 from flask import Flask
 import statsmodels as sm
 from statsmodels.tsa.ar_model import AutoReg
-
+import warnings 
+warnings.filterwarnings("ignore")
 
 
 
