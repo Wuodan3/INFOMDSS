@@ -1,7 +1,6 @@
 import dash
 from dash import dcc
 from dash import html
-from dash.dcc.RangeSlider import RangeSlider
 from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
@@ -15,7 +14,8 @@ app=Flask(__name__)
 @app.route("/")
 
 
-#load data function
+#This next function loads data from OWID. Every time the python file is ran a new version of the data will be loaded.
+#The data is minimized using usecols to reduce file size
 def dataloading():
     urlowid= "https://covid.ourworldindata.org/data/owid-covid-data.csv"
     colsowid = ['date','new_cases','stringency_index', 'location']
@@ -23,20 +23,21 @@ def dataloading():
     data['new_cases'] = data['new_cases'].replace(np.nan, 0)
     data = data.astype({"new_cases":np.int64, "stringency_index":np.float64, "location":object})
     data['date'] = pd.to_datetime(data['date']) #this helps when creating graphs where x = date
-    print(data.info())
     return data
 
+#This loads the RIVM data, the second data source. It will be used to predict new cases in the Netherlands 
+#Also this data is minimized to reduce file size and increase performance
 def RIVMdata():
     urlRIVM = "https://data.rivm.nl/covid-19/COVID-19_aantallen_gemeente_per_dag.csv"
-    cols = ['Date_of_publication', 'Total_reported']
-    data = pd.read_csv(urlRIVM, sep=';', usecols=cols)
+    colsrivm = ['Date_of_publication', 'Total_reported']
+    data = pd.read_csv(urlRIVM, usecols=colsrivm, sep=';')
     data = data.astype({'Total_reported':np.int64})
     data['date'] = pd.to_datetime(data['Date_of_publication'])
     data.sort_values(by=['date'])
     #Total_reported is postive tests per day
-    print(data.info())
     return data
 
+#these next functions filter the required countries from the OurWorldInData dataset
 def dataNL(df):
     NLdata = df.loc[df.location == "Netherlands", "location"]
     NLdata = pd.merge(NLdata, df)
@@ -52,6 +53,7 @@ def dataAUS(df):
     AUSdata = pd.merge(AUSdata, df)
     return AUSdata
 
+#this function is used to 
 def predictRIVM(df3):
     #AutoReg uses Conditional Maximum Likelihood estimate to predict 
     #source: https://www.statsmodels.org/dev/generated/statsmodels.tsa.ar_model.AutoReg.html
@@ -70,12 +72,17 @@ def predictor(x):
 #create dataframes
 df = dataloading()
 RIVMdf = RIVMdata()
+RIVMdf = RIVMdf.sort_values(by = 'date')
 NLdata = dataNL(df)
+NLdata = NLdata.sort_values(by = 'date')
 SWEdata = dataSWE(df)
+SWEdata = SWEdata.sort_values(by = 'date')
 AUSdata = dataAUS(df)
+AUSdata = AUSdata.sort_values(by = 'date')
 frames = [NLdata, SWEdata, AUSdata]
 threecountries = pd.concat(frames)
 print(threecountries)
+threecountries = threecountries.sort_values(by = 'date')
 
 #create dfs for figures in dropdown
 df1 = NLdata[['date', 'new_cases', 'location', 'stringency_index']]
@@ -88,7 +95,7 @@ print(df3.info())
 df4 = SWEdata[['date', 'new_cases', 'location', 'stringency_index']]
 df5 = AUSdata[['date', 'new_cases', 'location', 'stringency_index']]
 df6 = threecountries[['date', 'new_cases', 'location', 'stringency_index']]
-
+df6 = df6.sort_values(by = ['date', 'location'])
 
 #predict RIVM data using predictRIVM()
 df3onlynums = df3['Total_reported']
@@ -102,6 +109,7 @@ predicteddf['date'] = pd.date_range(start=pd.Timestamp('today'), periods=31)
 predicteddf['date'] = pd.to_datetime(predicteddf['date']).dt.date
 predicteddf['location'] = 'Netherlands'
 print(predicteddf)
+predicteddf = predicteddf.sort_values(by='date')
 
 # AutoRegression for sweden using predictor()
 SWEpredict = SWEdata['new_cases']
@@ -124,58 +132,33 @@ predictedAUS['location'] = 'Australia'
 print(predictedAUS)
 
 # combine data
-framesPredicted = [predicteddf, predictedSWE, predictedAUS]
+framesPredicted = [predictedAUS, predicteddf, predictedSWE]
 NLSWEAUSpredicted = pd.concat(framesPredicted)
 print(NLSWEAUSpredicted)
-NLSWEAUSpredicted['new_cases'] = NLSWEAUSpredicted['predicted']
-lk = [NLSWEAUSpredicted, threecountries]
-predictaddtoframes = pd.concat(lk)
+NLSWEAUSpredicted = NLSWEAUSpredicted.sort_values(by='date')
+
 
 # create graph with data from owid use date as x use new cases for y every 'location' gets different color
-fig37 = px.line(
-    threecountries, x='date', y='new_cases', color='location',
-    title="corona cases for each country", height=450
-)
 
 #create graph 2 specify the dataframe and what xy labels to use, every country gets own color
-fig2 = px.line(
-    threecountries, x='date', y='stringency_index', color='location',
-    title="stringency for each", height=450
-)
-figpredictadd = px.line(
-    predictaddtoframes, x='date', y='new_cases', color='location',
-    title="stringency for each", height=450
-)
 
-#RIVM graphs
-figRIVM = px.line(
-    df3, x='date', y='Total_reported',
-    title="RIVM reported cases per day", height=450
-)
+
 figPredicted = px.line(
     NLSWEAUSpredicted, x='date', y='predicted', color='location',
     title="Predicted trend for the next 30 days", height=450
 )
 
-#solve slow loading
-gh = px.line(
-        df6, x='date', y='stringency_index', color='location',
-        title="Corona cases for All", height=450
-        ) 
-
-fastload = px.line(
-        df6, x='date', y='new_cases', color='location',
-        title="Corona cases for All", height=450
-        ) 
+fig_cases_all = px.line(
+        threecountries, x='date', y='new_cases', color='location',
+        title="Corona cases for each country", height=450
+)
 
 # initialize dash
 app = dash.Dash(__name__)
 #give layout, graphs set at the top give unique id 
 app.layout = html.Div([
     html.Div([html.H1('COVID-19 Dashboard with Predictive Analytics', style={'font-family':'verdana'})]),
-    dcc.Graph(id="graph", figure=fig37),
-    dcc.Graph(id="graph200", figure=fig2),
-    dcc.Graph(id="graph201", figure=figpredictadd),
+    dcc.Graph(id="graph", figure=figPredicted),
 #    dcc.Graph(id="graph3", figure=figRIVM),
     
     dcc.Dropdown(
@@ -189,8 +172,7 @@ app.layout = html.Div([
         ),
     #instead of plotting specific countries we can plot predicted graphs
     dcc.Graph(id='graph1'),
-    dcc.Graph(id='graph2'),
-    dcc.Graph(id="graph4", figure=figPredicted)
+    dcc.Graph(id='graph2')
 ])
 @app.callback(Output(component_id='graph1', component_property= 'figure'),
               [Input(component_id='dropdown', component_property= 'value')])
@@ -200,23 +182,22 @@ def graph_update(dropdown_value):
     if dropdown_value == "Netherlands_cases":
         fig = px.line(
         df3, x='date', y='Total_reported',  
-        title="corona cases for Netherlands", height=450
+        title="Corona cases for Netherlands", height=450
         ) 
 
     if dropdown_value == "Sweden_cases":
         fig = px.line(
         df4, x='date', y='new_cases',  
-        title="corona cases for Sweden", height=450
+        title="Corona cases for Sweden", height=450
         ) 
         
     if dropdown_value == "Australia_cases":
         fig = px.line(
         df5, x='date', y='new_cases',  
-        title="corona cases for Australia", height=450
+        title="Corona cases for Australia", height=450
         ) 
     if dropdown_value == "All":
-        fig = fastload
-        
+        fig = fig_cases_all
 
     return fig
 
@@ -244,7 +225,11 @@ def graph_update(dropdown_value):
         title="Stringency Index for Australia", height=450
         ) 
     if dropdown_value == "All":
-        fig = gh
+        fig = px.line(
+        threecountries, x='date', y='stringency_index', color='location',
+        title="Stringency for each country", height=450
+        )
+
     return fig
 
 if __name__ == "__main__":
