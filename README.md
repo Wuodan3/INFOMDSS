@@ -10,7 +10,7 @@ Browser - Either Chrome or Firefox will suffice
 Patience - The dashboard takes a while to load, also changing graphs through the dropdown menu can take some time.
 
 ## Installation
-The project includes a dockerfile and a docker-compose file. In order to run the container simply clone or download the project, then navigate to the folder in a terminal and run 'docker-compose up'.
+The project includes a dockerfile and a docker-compose file. In order to run the container navigate to the downloaded folder in a terminal and run 'docker-compose up'.
 
 You will see some text showing up in the commandprompt. Once you see ```Dash is running on http://0.0.0.0:8050/``` then the dashboard is running. To see the dashboard go to 127.0.0.1:8050 in either Chrome or Firefox to see and interact with the dashboard.
 
