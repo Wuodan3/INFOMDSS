@@ -1,7 +1,7 @@
 # Covid-19 Dashboard with predictive analytics
 This program is the source code which creates a dashboard. The dashboard contains graphs on active cases and the stringency indexes for The Netherlands, Sweden, and Australia. The python program also features a predictive analytic aspect which uses Auto Regression on the positive case history of the forementioned countries. This result is a graph with the predicted new cases for the next 30 days.
 
-## Prequisites
+## Prerequisites
 
 Docker - Very useful tool to get the project running. Using Docker you won't have to install python packages or python itself to your system.
 
