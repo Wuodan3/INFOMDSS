@@ -84,17 +84,17 @@ AUSdata = dataAUS(df)
 AUSdata = AUSdata.sort_values(by = 'date')
 frames = [NLdata, SWEdata, AUSdata]
 threecountries = pd.concat(frames)
-print(threecountries)
+
 threecountries = threecountries.sort_values(by = 'date')
 
 #create dfs for figures in dropdown
 df1 = NLdata[['date', 'new_cases', 'location', 'stringency_index']]
 df2 = NLdata[['date', 'stringency_index', 'location', 'new_cases']]
 df3 = RIVMdf[['date', 'Total_reported']]
-print(df3.info())
+
 df3 = df3.groupby('date')['Total_reported'].sum()
 df3 = pd.DataFrame({'date':df3.index, 'Total_reported':df3.values})
-print(df3.info())
+
 df4 = SWEdata[['date', 'new_cases', 'location', 'stringency_index']]
 df5 = AUSdata[['date', 'new_cases', 'location', 'stringency_index']]
 df6 = threecountries[['date', 'new_cases', 'location', 'stringency_index']]
@@ -111,7 +111,7 @@ predicteddf['date'] = pd.date_range(start=pd.Timestamp('today'), periods=31)
 #remove hours from column date
 predicteddf['date'] = pd.to_datetime(predicteddf['date']).dt.date
 predicteddf['location'] = 'Netherlands'
-print(predicteddf)
+
 predicteddf = predicteddf.sort_values(by='date')
 
 # AutoRegression for sweden using predictor()
@@ -122,7 +122,7 @@ predictedSWE = pd.DataFrame({'index':predictSWE.index, 'predicted':predictSWE.va
 predictedSWE['date'] = pd.date_range(start=pd.Timestamp('today'), periods=31)
 predictedSWE['date'] = pd.to_datetime(predictedSWE['date']).dt.date
 predictedSWE['location'] = 'Sweden'
-print(predictedSWE)
+
 
 # AUtoRegression for Australia using predictor(), could be more efficient probably
 AUSpredict = AUSdata['new_cases']
@@ -132,12 +132,12 @@ predictedAUS = pd.DataFrame({'index':predictAUS.index, 'predicted':predictAUS.va
 predictedAUS['date'] = pd.date_range(start=pd.Timestamp('today'), periods=31)
 predictedAUS['date'] = pd.to_datetime(predictedAUS['date']).dt.date
 predictedAUS['location'] = 'Australia'
-print(predictedAUS)
+
 
 # combine data
 framesPredicted = [predictedAUS, predicteddf, predictedSWE]
 NLSWEAUSpredicted = pd.concat(framesPredicted)
-print(NLSWEAUSpredicted)
+
 NLSWEAUSpredicted = NLSWEAUSpredicted.sort_values(by='date')
 
 
