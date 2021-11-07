@@ -6,7 +6,7 @@ services:
     image: corona:1.0.0
     container_name: corona_dashboard
     ports:
-      - "80:8050"
+      - "5000:5000"
     environment:
       - TARGET=LIVE
     restart: unless-stopped

@@ -11,7 +11,9 @@ from statsmodels.tsa.ar_model import AutoReg
 import warnings 
 warnings.filterwarnings("ignore")
 
+app=Flask(__name__)
 
+@app.route("/")
 
 
 
@@ -235,4 +237,4 @@ def graph_update(dropdown_value):
 
 server = app.server
 if __name__ == "__main__":
-    app.run_server(host='0.0.0.0')
+    app.run_server(host='0.0.0.0', port=5000)
